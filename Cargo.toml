@@ -1,0 +1,25 @@
+[package]
+name = "stealth-gas-cli"
+version = "0.0.1"
+authors = ["kassandra.eth <0xDADA@protonmail.com>"]
+license = "MIT"
+edition = "2021"
+description = "CLI for managing Ethereum blind gas tickets on client side"
+readme = "README.md"
+homepage = "https://github.com/kassandraoftroy/eth-stealth-gas-tickets"
+repository = "https://github.com/kassandraoftroy/eth-stealth-gas-tickets"
+keywords = ["ethereum", "eth", "privacy", "stealth", "gas"]
+
+[[bin]]
+name = "stealth-gas"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+eth-stealth-gas-tickets = "0.3.0"
+rand = "0.8"
+alloy = { version = "0.9.2", features = ["full"] }
+tokio = { version = "1.42.0", features = ["full"] }
+
