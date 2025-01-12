@@ -21,6 +21,13 @@ fn get_contract_address(chain_id: u64) -> Address {
     }
 }
 
+fn get_url(chain_id: u64) -> String {
+    match chain_id {
+        17000 => "https://0000000000.org".to_string(),
+        _ => panic!("Unsupported chain ID: {}", chain_id),
+    }
+}
+
 // Convert U256 (wei) to a human-readable ETH amount as a string
 fn u256_to_eth(wei: U256) -> String {
     // 10^18 in U256
@@ -56,6 +63,7 @@ pub async fn run(rpc_url: String) -> Result<(), Box<dyn std::error::Error>> {
 
     // Print the hex-encoded public key
     println!("StealthGasStation contract: {}", contract_address);
+    println!("Coordinator URL: {}", get_url(chain_id));
     println!("Ticket Cost: {}", u256_to_eth(ticket_cost_return._0));
     println!("Shipping Cost: {}", u256_to_eth(shipping_cost_return._0));
     println!("Coordinator PubKey: 0x{}", hex::encode(pubkey_return._0));

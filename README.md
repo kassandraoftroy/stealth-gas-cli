@@ -22,32 +22,36 @@ step 1: fetch the coordinator pubkey and other public parameters (this is just f
 stealth-gas params --rpc-url https://ethereum-holesky-rpc.publicnode.com
 ```
 
-step 2: generate unsigned tickets
+step 2: generate 10 unsigned tickets
 
 ```bash
-stealth-gas new --k 0xCoordinatorPubKey --n 10 --o unsigned_tickets.json
+stealth-gas new --key 0xCoordinatorPubKey --num 10 --output unsigned_tickets.json
 ```
 
-now user can extract the msg data from each unsigned ticket and craft a buyGasTickets() transaction on the StealthGasStation contract ([see contract repo](https://github.com/kassandraoftroy/stealth-gas-station) for a helper script to do this)
-
-step 3: after buying gas tickets (wait for finalization), scan the chain for blind signatures that match your unsigned tickets
+step 3: call buyGasTickets with your 10 unsigned tickets
 
 ```bash
-stealth-gas scan --rpc-url https://ethereum-holesky-rpc.publicnode.com -c 0xGasStationAddress -i unsigned_tickets.json -s 1000000 --o finalizeable.json
+stealth-gas buy --rpc-url https://ethereum-holesky-rpc.publicnode.com --contract-address 0xGasStationAddress --input unsigned_tickets.json --private-key 0xPrivateKey
 ```
 
-step 4: finalize the blind signatures to generate redeemable gas tickets
+step 4: after buying gas tickets (wait for finalization), scan the chain for blind signatures that match your unsigned tickets.
 
 ```bash
-stealth-gas finalize --rpc-url https://ethereum-holesky-rpc.publicnode.com --i finalizeable.json --o signed_tickets.json
+stealth-gas scan --rpc-url https://ethereum-holesky-rpc.publicnode.com --contract-address 0xGasStationAddress --input unsigned_tickets.json --start-block 1000000 --output finalizeable.json
 ```
 
-with finalized gas tickets user can now send a SpendRequest to the coordinator server and redeem any number of finalized gas tickets, pointing the funds to the address of their choosing.
-
-example:
+step 5: after finding your 10 signed (blind) tickets in the scan, finalize the blind signatures to generate redeemable gas tickets
 
 ```bash
-curl -X POST http://coordinatorURL.com/spend -H "Content-Type: application/json" -d '{ "signatures": [<SignedTickets>], "spends": [{"amount": "2000000000000000", "receiver": "0xYourAddress"}]}'
+stealth-gas finalize -r https://ethereum-holesky-rpc.publicnode.com -i finalizeable.json -o signed_tickets.json
 ```
 
-here we redeem two signed tickets (of 0.001 ETH each) and send all the result to 0xYourAddress. If 0xYourAddress is anonymous, then redeemer retains privacy because no one knows which ticket was redeemed (not even the coordinator).
+step 6: user can now send a SpendRequest to the coordinator server and redeem the 10 signed tickets (or any number of tickets depending on how many SignedTickets are in the input JSON file)
+
+```bash
+stealth-gas redeem -u https://0000000000.org -i ~/Desktop/st100.json -s '[{"amount": "9900000000000000", "receiver": "0xYourAnonAddress"}]'
+```
+
+here we redeem 10 signed tickets worth 0.01 ETH in total. We send 0.0099 ETH to 0xYourAnonAddress. (Since there is leftover the coordinator will take it and transfer herself 0.0001 ETH)
+
+Since 0xYourAnonAddress is anonymous, then redeemer retains privacy because no one knows which ticket was redeemed (not even the coordinator).
