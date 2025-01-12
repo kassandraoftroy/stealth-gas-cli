@@ -55,6 +55,26 @@ enum Commands {
         #[arg(short = 'r', long = "rpc-url", help = "RPC URL (for a supported chain id)")]
         rpc: String,
     },
+    /// Buy gas tickets on-chain
+    Buy {
+        #[arg(short = 'r', long = "rpc-url", help = "RPC URL (for a supported chain id)")]
+        rpc: String,
+        #[arg(short = 'c', long = "contract-address", help = "StealthGasStation contract address")]
+        contract_address: String,
+        #[arg(short = 'i', long = "input", help = "Input JSON file of Vec<UnsignedTicket> type")]
+        input: String,
+        #[arg(short = 'p', long = "private-key", help = "Private key for transaction signing")]
+        private_key: String,
+    },
+    /// Redeem signed tickets through coordinator
+    Redeem {
+        #[arg(short = 'u', long = "url", help = "Coordinator URL endpoint")]
+        url: String,
+        #[arg(short = 'i', long = "input", help = "Input JSON file of Vec<SignedTicket> type")]
+        input: String,
+        #[arg(short = 's', long = "spends", help = "JSON file containing spend requests [{\"amount\": string, \"receiver\": string}]")]
+        spends: String,
+    },
 }
 
 #[tokio::main]
@@ -67,6 +87,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Verify { key, input } => Ok(commands::verify::run(key, input)),
         Commands::Scan { rpc, contract_address, input, start, output } => commands::scan::run(rpc, contract_address, input, start, output).await,
         Commands::Params { rpc } => commands::params::run(rpc).await,
+        Commands::Buy { rpc, contract_address, input, private_key } => commands::buy::run(rpc, contract_address, input, private_key).await,
+        Commands::Redeem { url, input, spends } => commands::redeem::run(url, input, spends).await,
     }
 }
 
