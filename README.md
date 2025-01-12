@@ -1,6 +1,6 @@
 # stealth-gas-cli
 
-a command line tool for client side cryptographic operations for a Stealth Gas Station service that wraps the [eth-stealth-gas-tickets](https://github.com/kassandraoftroy/eth-stealth-gas-tickets) rust library.
+a command line tool for client side operations with a Stealth Gas Station service. It wraps the [eth-stealth-gas-tickets](https://github.com/kassandraoftroy/eth-stealth-gas-tickets) rust library for cryptographic operations.
 
 ## Installation
 
