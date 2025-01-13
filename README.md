@@ -34,7 +34,7 @@ step 3: call buyGasTickets with your 10 unsigned tickets
 stealth-gas buy --rpc-url https://ethereum-holesky-rpc.publicnode.com --contract-address 0xGasStationAddress --input unsigned_tickets.json --private-key 0xPrivateKey
 ```
 
-step 4: after buying gas tickets (wait for finalization), scan the chain for blind signatures that match your unsigned tickets.
+step 4: after buying gas tickets (wait for finalization, this takes like a 12-15 min wait), scan the chain for blind signatures that match your unsigned tickets.
 
 ```bash
 stealth-gas scan --rpc-url https://ethereum-holesky-rpc.publicnode.com --contract-address 0xGasStationAddress --input unsigned_tickets.json --start-block 1000000 --output finalizeable.json
