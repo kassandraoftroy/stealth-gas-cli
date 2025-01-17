@@ -43,13 +43,13 @@ stealth-gas scan --rpc-url https://ethereum-holesky-rpc.publicnode.com --contrac
 step 5: after finding your 10 signed (blind) tickets in the scan, finalize the blind signatures to generate redeemable gas tickets
 
 ```bash
-stealth-gas finalize -r https://ethereum-holesky-rpc.publicnode.com -i finalizeable.json -o signed_tickets.json
+stealth-gas finalize --key 0xCoordinatorPubKey -i finalizeable.json -o signed_tickets.json
 ```
 
 step 6: user can now send a SpendRequest to the coordinator server and redeem the 10 signed tickets (or any number of tickets depending on how many SignedTickets are in the input JSON file)
 
 ```bash
-stealth-gas redeem -u https://0000000000.org -i ~/Desktop/st100.json -s '[{"amount": "9900000000000000", "receiver": "0xYourAnonAddress"}]'
+stealth-gas redeem -u https://0000000000.org -i signed_tickets.json -s '[{"amount": "9900000000000000", "receiver": "0xYourAnonAddress"}]'
 ```
 
 here we redeem 10 signed tickets worth 0.01 ETH in total. We send 0.0099 ETH to 0xYourAnonAddress. (Since there is leftover the coordinator will take it and transfer herself 0.0001 ETH)

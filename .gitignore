@@ -1,3 +1,6 @@
 /target
 
 .env
+finalizeable.json
+signed_tickets.json
+unsigned_tickets.json

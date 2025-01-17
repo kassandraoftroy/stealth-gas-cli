@@ -64,7 +64,9 @@ enum Commands {
         #[arg(short = 'i', long = "input", help = "Input JSON file of Vec<UnsignedTicket> type")]
         input: String,
         #[arg(short = 'p', long = "private-key", help = "Private key for transaction signing")]
-        private_key: String,
+        private_key: Option<String>,
+        #[arg(short = 'a', long = "account", help = "Path to keystore file for transaction signing")]
+        account: Option<String>,
     },
     /// Redeem signed tickets through coordinator
     Redeem {
@@ -87,7 +89,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Verify { key, input } => Ok(commands::verify::run(key, input)),
         Commands::Scan { rpc, contract_address, input, start, output } => commands::scan::run(rpc, contract_address, input, start, output).await,
         Commands::Params { rpc } => commands::params::run(rpc).await,
-        Commands::Buy { rpc, contract_address, input, private_key } => commands::buy::run(rpc, contract_address, input, private_key).await,
+        Commands::Buy { rpc, contract_address, input, private_key, account } => commands::buy::run(rpc, contract_address, input, private_key, account).await,
         Commands::Redeem { url, input, spends } => commands::redeem::run(url, input, spends).await,
     }
 }
