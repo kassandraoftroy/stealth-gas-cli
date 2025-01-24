@@ -1,18 +1,18 @@
+use crate::commands::utils::{get_default_contract_address, get_default_pubkey, get_default_rpc};
 use alloy::{
     hex,
     primitives::{Address, FixedBytes},
     providers::{Provider, ProviderBuilder},
     rpc::types::Filter,
     sol,
-    sol_types::SolEvent
+    sol_types::SolEvent,
 };
+use dirs;
 use eth_stealth_gas_tickets::{BlindedSignature, TicketsVerifier, UnsignedTicket};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Write;
 use std::path::Path;
-use dirs;
-use crate::commands::utils::{get_default_rpc, get_default_contract_address, get_default_pubkey};
 
 sol! {
     #[sol(rpc)]
@@ -29,9 +29,9 @@ pub struct FinalizeInput {
 }
 
 pub async fn run(
-    pubkey: Option<String>, 
-    input: Option<String>, 
-    output: Option<String>, 
+    pubkey: Option<String>,
+    input: Option<String>,
+    output: Option<String>,
     rpc: Option<String>,
     contract_address: Option<String>,
     start_block: u64,
@@ -51,7 +51,8 @@ pub async fn run(
     if input_path.is_empty() {
         let home_dir = dirs::home_dir().expect("Could not find home directory");
         let stealth_dir = home_dir.join(".stealthereum");
-        input_path = stealth_dir.join(format!("unsigned_tickets_{}.json", chain_id))
+        input_path = stealth_dir
+            .join(format!("unsigned_tickets_{}.json", chain_id))
             .to_str()
             .expect("Failed to convert path to string")
             .to_string();
@@ -62,9 +63,11 @@ pub async fn run(
         let home_dir = dirs::home_dir().expect("Could not find home directory");
         let stealth_dir = home_dir.join(".stealthereum");
         if !stealth_dir.exists() {
-            std::fs::create_dir_all(&stealth_dir).expect("Failed to create .stealthereum directory");
+            std::fs::create_dir_all(&stealth_dir)
+                .expect("Failed to create .stealthereum directory");
         }
-        output_path = stealth_dir.join(format!("finalized_tickets_{}.json", chain_id))
+        output_path = stealth_dir
+            .join(format!("finalized_tickets_{}.json", chain_id))
             .to_str()
             .expect("Failed to convert path to string")
             .to_string();
@@ -76,8 +79,7 @@ pub async fn run(
     let ticket_ids: Vec<FixedBytes<32>> = all_unsigned_tickets.iter().map(|t| t.id).collect();
 
     // Set up the provider
-    let provider = ProviderBuilder::new()
-        .on_http(rpc_url.parse().unwrap());
+    let provider = ProviderBuilder::new().on_http(rpc_url.parse().unwrap());
 
     let contract_address = Address::from_slice(&hex::decode(contract.replace("0x", "")).unwrap());
 
@@ -101,13 +103,22 @@ pub async fn run(
                         id: *id,
                         blind_sig: signed_data.clone(),
                     });
-                    unsigned_tickets.push(all_unsigned_tickets.iter().find(|t| t.id == *id).unwrap().clone());
+                    unsigned_tickets.push(
+                        all_unsigned_tickets
+                            .iter()
+                            .find(|t| t.id == *id)
+                            .unwrap()
+                            .clone(),
+                    );
                 }
             }
         }
     }
 
-    println!("Scan Finished. Found {} matching tickets.", blind_signatures.len());
+    println!(
+        "Scan Finished. Found {} matching tickets.",
+        blind_signatures.len()
+    );
 
     // Initialize the ticket verifier
     let pubkey = TicketsVerifier::from_hex_string(&pubkey_hex).expect("Invalid public key");
@@ -122,7 +133,8 @@ pub async fn run(
     }
 
     // Write the signed tickets to the output JSON file
-    let json = serde_json::to_string_pretty(&signed_tickets).expect("Failed to serialize signed tickets");
+    let json =
+        serde_json::to_string_pretty(&signed_tickets).expect("Failed to serialize signed tickets");
     let mut output_file = fs::File::create(&output_path).expect("Failed to create output file");
     output_file
         .write_all(json.as_bytes())

@@ -1,15 +1,15 @@
+use crate::commands::utils::{get_default_contract_address, get_default_rpc};
 use alloy::{
     hex,
-    primitives::{U256, Address, Bytes},
-    providers::ProviderBuilder,
     network::EthereumWallet,
-    sol,
+    primitives::{Address, Bytes, U256},
+    providers::ProviderBuilder,
     signers::local::PrivateKeySigner,
+    sol,
 };
 use eth_stealth_gas_tickets::UnsignedTicket;
 use serde_json;
 use std::fs;
-use crate::commands::utils::{get_default_rpc, get_default_contract_address};
 
 sol! {
     #[sol(rpc)]
@@ -20,7 +20,14 @@ sol! {
     }
 }
 
-pub async fn run(rpc_url: Option<String>, contract_address: Option<String>, input: Option<String>, private_key: Option<String>, account: Option<String>, chain_id: Option<u64>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(
+    rpc_url: Option<String>,
+    contract_address: Option<String>,
+    input: Option<String>,
+    private_key: Option<String>,
+    account: Option<String>,
+    chain_id: Option<u64>,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Get chain ID and defaults
     let chain_id = chain_id.unwrap_or(17000);
 
@@ -49,7 +56,7 @@ pub async fn run(rpc_url: Option<String>, contract_address: Option<String>, inpu
         let password = rpassword::prompt_password("Enter keystore password:")?;
         PrivateKeySigner::decrypt_keystore(account, password).expect("failed to unlock keystore")
     } else {
-        return Err("Neither private key or keystore provided".into())
+        return Err("Neither private key or keystore provided".into());
     };
     let signer_provider = ProviderBuilder::new()
         .with_recommended_fillers()
@@ -61,11 +68,11 @@ pub async fn run(rpc_url: Option<String>, contract_address: Option<String>, inpu
 
     // Load unsigned tickets
     let unsigned_tickets: Vec<UnsignedTicket> = serde_json::from_str(&fs::read_to_string(input)?)?;
-    
+
     // Get costs from contract
     let ticket_cost = contract.ticketCost().call().await?._0;
     let shipping_cost = contract.shippingCost().call().await?._0;
-    
+
     // Calculate total cost
     let total_cost = ticket_cost * U256::from(unsigned_tickets.len()) + shipping_cost;
 

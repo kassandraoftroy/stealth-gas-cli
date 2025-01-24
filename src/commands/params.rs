@@ -1,10 +1,10 @@
+use crate::commands::utils::{get_default_contract_address, get_default_rpc, get_default_url};
 use alloy::{
     hex,
-    primitives::{U256, Address},
+    primitives::{Address, U256},
     providers::ProviderBuilder,
     sol,
 };
-use crate::commands::utils::{get_default_contract_address, get_default_url, get_default_rpc};
 
 sol! {
     #[sol(rpc)]
@@ -31,18 +31,22 @@ fn u256_to_eth(wei: U256) -> String {
     format!("{}.{} ETH", whole, fractional_str.trim_end_matches('0'))
 }
 
-pub async fn run(rpc_url: Option<String>, chain_id: Option<u64>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(
+    rpc_url: Option<String>,
+    chain_id: Option<u64>,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Use provided chain ID or default to 17000
     let chain_id = chain_id.unwrap_or(17000);
-    
+
     // Use provided RPC URL or get default based on chain ID
     let rpc_url = rpc_url.unwrap_or(get_default_rpc(chain_id));
-    
+
     // Set up the provider using Arc for shared ownership
     let provider = ProviderBuilder::new().on_http(rpc_url.parse()?);
 
     let contract_address_string = get_default_contract_address(chain_id);
-    let contract_address = Address::from_slice(&hex::decode(contract_address_string.replace("0x", "")).unwrap());
+    let contract_address =
+        Address::from_slice(&hex::decode(contract_address_string.replace("0x", "")).unwrap());
     // Create contract instance with shared provider
     let contract = IStealthGasStation::new(contract_address, provider.clone());
 
@@ -61,5 +65,3 @@ pub async fn run(rpc_url: Option<String>, chain_id: Option<u64>) -> Result<(), B
 
     Ok(())
 }
-
-

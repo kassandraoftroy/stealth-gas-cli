@@ -1,12 +1,17 @@
+use crate::commands::utils::{get_default_pubkey, get_default_tickets_number};
+use dirs;
 use eth_stealth_gas_tickets::TicketsVerifier;
 use rand::thread_rng;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use dirs;
-use crate::commands::utils::{get_default_pubkey, get_default_tickets_number};
 
-pub fn run(pubkey_hex: Option<String>, count: Option<usize>, output_path: Option<String>, chain_id: Option<u64>) {
+pub fn run(
+    pubkey_hex: Option<String>,
+    count: Option<usize>,
+    output_path: Option<String>,
+    chain_id: Option<u64>,
+) {
     // Default to chain ID 17000 if not specified
     let chain_id = chain_id.unwrap_or(17000);
 
@@ -18,9 +23,11 @@ pub fn run(pubkey_hex: Option<String>, count: Option<usize>, output_path: Option
         let home_dir = dirs::home_dir().expect("Could not find home directory");
         let stealth_dir = home_dir.join(".stealthereum");
         if !stealth_dir.exists() {
-            std::fs::create_dir_all(&stealth_dir).expect("Failed to create .stealthereum directory");
+            std::fs::create_dir_all(&stealth_dir)
+                .expect("Failed to create .stealthereum directory");
         }
-        output_path = stealth_dir.join(format!("unsigned_tickets_{}.json", chain_id))
+        output_path = stealth_dir
+            .join(format!("unsigned_tickets_{}.json", chain_id))
             .to_str()
             .expect("Failed to convert path to string")
             .to_string();
@@ -40,7 +47,8 @@ pub fn run(pubkey_hex: Option<String>, count: Option<usize>, output_path: Option
 
     let json = serde_json::to_string_pretty(&tickets).expect("Failed to serialize tickets");
     let mut file = File::create(&output_path).expect("Failed to create output file");
-    file.write_all(json.as_bytes()).expect("Failed to write to file");
+    file.write_all(json.as_bytes())
+        .expect("Failed to write to file");
 
     println!("Generated {} tickets and saved to {}", count, output_path);
 }
