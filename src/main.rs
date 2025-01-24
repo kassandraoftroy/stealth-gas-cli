@@ -34,7 +34,7 @@ enum Commands {
         #[arg(
             short = 'i',
             long = "input",
-            help = "Input JSON file path of FinalizeInput type (unsigned tickets and blind signatures)"
+            help = "Input JSON file path of Vec<UnsignedTicket> type (unsigned tickets)"
         )]
         input: Option<String>,
         #[arg(

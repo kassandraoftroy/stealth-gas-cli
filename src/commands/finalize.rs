@@ -83,36 +83,50 @@ pub async fn run(
 
     let contract_address = Address::from_slice(&hex::decode(contract.replace("0x", "")).unwrap());
 
-    // Set up the event filter for SendGasTickets
-    let filter = Filter::new()
-        .address(vec![contract_address])
-        .event_signature(IStealthGasStation::SendGasTickets::SIGNATURE_HASH)
-        .from_block(start_block);
+    // Get current block number
+    let mut current_end_block = provider.get_block_number().await?;
+    let mut blind_signatures = Vec::new();
+    let mut unsigned_tickets = Vec::new();
 
     println!("Scanning for events from block {}", start_block);
 
-    // Fetch and filter events
-    let logs = provider.get_logs(&filter).await?;
-    let mut blind_signatures = Vec::new();
-    let mut unsigned_tickets = Vec::new();
-    for log in logs {
-        if let Ok(decoded) = log.log_decode::<IStealthGasStation::SendGasTickets>() {
-            for (id, signed_data) in decoded.inner.ids.iter().zip(decoded.inner.signed.iter()) {
-                if ticket_ids.contains(id) {
-                    blind_signatures.push(BlindedSignature {
-                        id: *id,
-                        blind_sig: signed_data.clone(),
-                    });
-                    unsigned_tickets.push(
-                        all_unsigned_tickets
-                            .iter()
-                            .find(|t| t.id == *id)
-                            .unwrap()
-                            .clone(),
-                    );
+    while start_block < current_end_block {
+        let current_start_block = if current_end_block >= 49999 {
+            current_end_block - 49999
+        } else {
+            0
+        };
+
+        // Set up the event filter for SendGasTickets
+        let filter = Filter::new()
+            .address(vec![contract_address])
+            .event_signature(IStealthGasStation::SendGasTickets::SIGNATURE_HASH)
+            .from_block(current_start_block)
+            .to_block(current_end_block);
+
+        // Fetch and filter events
+        let logs = provider.get_logs(&filter).await?;
+        for log in logs {
+            if let Ok(decoded) = log.log_decode::<IStealthGasStation::SendGasTickets>() {
+                for (id, signed_data) in decoded.inner.ids.iter().zip(decoded.inner.signed.iter()) {
+                    if ticket_ids.contains(id) {
+                        blind_signatures.push(BlindedSignature {
+                            id: *id,
+                            blind_sig: signed_data.clone(),
+                        });
+                        unsigned_tickets.push(
+                            all_unsigned_tickets
+                                .iter()
+                                .find(|t| t.id == *id)
+                                .unwrap()
+                                .clone(),
+                        );
+                    }
                 }
             }
         }
+
+        current_end_block = current_start_block;
     }
 
     println!(

@@ -34,7 +34,18 @@ pub async fn run(
     // Use provided values or defaults
     let rpc_url = rpc_url.unwrap_or(get_default_rpc(chain_id));
     let contract_address = contract_address.unwrap_or(get_default_contract_address(chain_id));
-    let input = input.ok_or("Input file must be provided")?;
+    let mut input_path = input.unwrap_or_else(|| "".to_string());
+
+    // If input path is empty, use default path in ~/.stealthereum
+    if input_path.is_empty() {
+        let home_dir = dirs::home_dir().expect("Could not find home directory");
+        let stealth_dir = home_dir.join(".stealthereum");
+        input_path = stealth_dir
+            .join(format!("unsigned_tickets_{}.json", chain_id))
+            .to_str()
+            .expect("Failed to convert path to string")
+            .to_string();
+    }
 
     if private_key.is_none() && account.is_none() {
         return Err("Either private key or account path must be provided".into());
@@ -67,7 +78,7 @@ pub async fn run(
     let contract = IStealthGasStation::new(contract_address, signer_provider.clone());
 
     // Load unsigned tickets
-    let unsigned_tickets: Vec<UnsignedTicket> = serde_json::from_str(&fs::read_to_string(input)?)?;
+    let unsigned_tickets: Vec<UnsignedTicket> = serde_json::from_str(&fs::read_to_string(&input_path)?)?;
 
     // Get costs from contract
     let ticket_cost = contract.ticketCost().call().await?._0;
