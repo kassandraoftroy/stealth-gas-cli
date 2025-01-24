@@ -6,10 +6,10 @@ use alloy::{
     sol,
     signers::local::PrivateKeySigner,
 };
-use alloy_signer_local::PrivateKeySigner;
 use eth_stealth_gas_tickets::UnsignedTicket;
 use serde_json;
 use std::fs;
+use crate::commands::utils::{get_default_rpc, get_default_contract_address};
 
 sol! {
     #[sol(rpc)]
@@ -20,7 +20,15 @@ sol! {
     }
 }
 
-pub async fn run(rpc_url: String, contract_address: String, input: String, private_key: Option<String>, account: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(rpc_url: Option<String>, contract_address: Option<String>, input: Option<String>, private_key: Option<String>, account: Option<String>, chain_id: Option<u64>) -> Result<(), Box<dyn std::error::Error>> {
+    // Get chain ID and defaults
+    let chain_id = chain_id.unwrap_or(17000);
+
+    // Use provided values or defaults
+    let rpc_url = rpc_url.unwrap_or(get_default_rpc(chain_id));
+    let contract_address = contract_address.unwrap_or(get_default_contract_address(chain_id));
+    let input = input.ok_or("Input file must be provided")?;
+
     if private_key.is_none() && account.is_none() {
         return Err("Either private key or account path must be provided".into());
     }

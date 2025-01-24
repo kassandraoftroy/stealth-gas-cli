@@ -1,9 +1,10 @@
 use alloy::{
     hex,
     primitives::{U256, Address},
-    providers::{Provider, ProviderBuilder},
+    providers::ProviderBuilder,
     sol,
 };
+use crate::commands::utils::{get_default_contract_address, get_default_url, get_default_rpc};
 
 sol! {
     #[sol(rpc)]
@@ -11,20 +12,6 @@ sol! {
         function coordinatorPubKey() external view returns (bytes memory);
         function ticketCost() external view returns (uint256);
         function shippingCost() external view returns (uint256);
-    }
-}
-
-fn get_contract_address(chain_id: u64) -> Address {
-    match chain_id {
-        17000 => Address::from_slice(&hex::decode("0x943285f1a29281e59514fF35Dc16E5a14E123a27".replace("0x", "")).unwrap()),
-        _ => panic!("Unsupported chain ID: {}", chain_id),
-    }
-}
-
-fn get_url(chain_id: u64) -> String {
-    match chain_id {
-        17000 => "https://0000000000.org".to_string(),
-        _ => panic!("Unsupported chain ID: {}", chain_id),
     }
 }
 
@@ -44,14 +31,18 @@ fn u256_to_eth(wei: U256) -> String {
     format!("{}.{} ETH", whole, fractional_str.trim_end_matches('0'))
 }
 
-pub async fn run(rpc_url: String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(rpc_url: Option<String>, chain_id: Option<u64>) -> Result<(), Box<dyn std::error::Error>> {
+    // Use provided chain ID or default to 17000
+    let chain_id = chain_id.unwrap_or(17000);
+    
+    // Use provided RPC URL or get default based on chain ID
+    let rpc_url = rpc_url.unwrap_or(get_default_rpc(chain_id));
+    
     // Set up the provider using Arc for shared ownership
     let provider = ProviderBuilder::new().on_http(rpc_url.parse()?);
 
-    // Retrieve chain ID
-    let chain_id = provider.get_chain_id().await?;
-    let contract_address = get_contract_address(chain_id);
-
+    let contract_address_string = get_default_contract_address(chain_id);
+    let contract_address = Address::from_slice(&hex::decode(contract_address_string.replace("0x", "")).unwrap());
     // Create contract instance with shared provider
     let contract = IStealthGasStation::new(contract_address, provider.clone());
 
@@ -63,7 +54,7 @@ pub async fn run(rpc_url: String) -> Result<(), Box<dyn std::error::Error>> {
 
     // Print the hex-encoded public key
     println!("StealthGasStation contract: {}", contract_address);
-    println!("Coordinator URL: {}", get_url(chain_id));
+    println!("Coordinator URL: {}", get_default_url(chain_id));
     println!("Ticket Cost: {}", u256_to_eth(ticket_cost_return._0));
     println!("Shipping Cost: {}", u256_to_eth(shipping_cost_return._0));
     println!("Coordinator PubKey: 0x{}", hex::encode(pubkey_return._0));

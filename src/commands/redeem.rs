@@ -5,6 +5,8 @@ use serde_json;
 use std::fs;
 use alloy::primitives::{U256, Address};
 use std::str::FromStr;
+use dirs;
+use crate::commands::utils::get_default_url;
 
 #[derive(Serialize, Deserialize)]
 pub struct Spend {
@@ -24,9 +26,31 @@ pub struct SpendRequest {
     pub spends: Vec<Spend>,
 }
 
-pub async fn run(url: String, input: String, spends_json: String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(
+    url: Option<String>, 
+    input: Option<String>, 
+    spends_json: String,
+    chain_id: Option<u64>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Get chain ID and defaults
+    let chain_id = chain_id.unwrap_or(17000);
+
+    // Use provided values or defaults
+    let url = url.unwrap_or(get_default_url(chain_id));
+    let mut input_path = input.unwrap_or_else(|| "".to_string());
+
+    // If input path is empty, use default path in ~/.stealthereum
+    if input_path.is_empty() {
+        let home_dir = dirs::home_dir().expect("Could not find home directory");
+        let stealth_dir = home_dir.join(".stealthereum");
+        input_path = stealth_dir.join(format!("finalized_tickets_{}.json", chain_id))
+            .to_str()
+            .expect("Failed to convert path to string")
+            .to_string();
+    }
+
     // Load signed tickets
-    let signed_tickets: Vec<SignedTicket> = serde_json::from_str(&fs::read_to_string(input)?)?;
+    let signed_tickets: Vec<SignedTicket> = serde_json::from_str(&fs::read_to_string(&input_path)?)?;
     
     // Load spends from raw JSON
     let spends: Vec<SpendInput> = serde_json::from_str(&spends_json)?;
