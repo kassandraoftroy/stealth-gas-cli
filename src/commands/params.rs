@@ -57,6 +57,7 @@ pub async fn run(
     let shipping_cost_return = contract.shippingCost().call().await?;
 
     // Print the hex-encoded public key
+    println!("Chain ID: {}", chain_id);
     println!("StealthGasStation contract: {}", contract_address);
     println!("Coordinator URL: {}", get_default_url(chain_id));
     println!("Ticket Cost: {}", u256_to_eth(ticket_cost_return._0));

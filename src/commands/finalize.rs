@@ -23,9 +23,9 @@ sol! {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct FinalizeInput {
-    pub unsigned_tickets: Vec<UnsignedTicket>,
-    pub blind_signatures: Vec<BlindedSignature>,
+struct FinalizeInput {
+    unsigned_tickets: Vec<UnsignedTicket>,
+    blind_signatures: Vec<BlindedSignature>,
 }
 
 pub async fn run(
