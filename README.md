@@ -14,44 +14,36 @@ cargo install stealth-gas-cli
 
 (more soon)
 
-## Usage
+## Basic Usage
 
-step 1: fetch the coordinator pubkey and other public parameters (this is just for convenience you can fetch this onchain yourself as well)
-
-```bash
-stealth-gas params --rpc-url https://ethereum-holesky-rpc.publicnode.com
-```
-
-step 2: generate 10 unsigned tickets
+step 1: generate 10 unsigned tickets and store them locally
 
 ```bash
-stealth-gas new --key 0xCoordinatorPubKey --num 10 --output unsigned_tickets.json
+stealth-gas new -n 10
 ```
 
-step 3: call buyGasTickets with your 10 unsigned tickets
+step 2: call buyGasTickets onchain to take your 10 locally created unsigned tickets and buy them from the coordinator
 
 ```bash
-stealth-gas buy --rpc-url https://ethereum-holesky-rpc.publicnode.com --contract-address 0xGasStationAddress --input unsigned_tickets.json --private-key 0xPrivateKey
+stealth-gas buy -i ~/.stealthereum/unsigned_tickets_17000.json -k 0xYourPrivateKey
 ```
 
-step 4: after buying gas tickets and waiting (for finalization, about a 12 minute wait in normal conditions), scan the chain for blind signatures that match your unsigned tickets.
+step 3: after buying gas tickets and waiting (~15 min must wait usually, but up to ~1 hour at worst) finalize your tickets
 
 ```bash
-stealth-gas scan --rpc-url https://ethereum-holesky-rpc.publicnode.com --contract-address 0xGasStationAddress --input unsigned_tickets.json --start-block 1000000 --output finalizeable.json
+stealth-gas finalize --start-block 3048901 -i ~/.stealthereum/unsigned_tickets_17000.json
 ```
 
-step 5: after finding your 10 signed (blind) tickets in the scan, finalize the blind signatures to generate redeemable gas tickets
+step 4: user can now send a SpendRequest to the coordinator server and redeem the 10 signed tickets (or any number of tickets depending on how many SignedTickets are in the input JSON file of finalized tickets)
 
 ```bash
-stealth-gas finalize --key 0xCoordinatorPubKey -i finalizeable.json -o signed_tickets.json
+stealth-gas redeem -s '[{"amount": "9900000000000000", "receiver": "0xYourAnonAddress"}]' -i ~/.stealthereum/finalized_tickets_17000.json
 ```
 
-step 6: user can now send a SpendRequest to the coordinator server and redeem the 10 signed tickets (or any number of tickets depending on how many SignedTickets are in the input JSON file)
-
-```bash
-stealth-gas redeem -u https://0000000000.org -i signed_tickets.json -s '[{"amount": "9900000000000000", "receiver": "0xYourAnonAddress"}]'
-```
-
-here we redeem 10 signed tickets worth 0.01 ETH in total. We send 0.0099 ETH to 0xYourAnonAddress. (Since there is leftover the coordinator will take it and transfer herself 0.0001 ETH)
+here we redeem 10 signed tickets worth 0.01 ETH in total. We send 0.0099 ETH to 0xYourAnonAddress. (Since there is leftover the coordinator will take it and transfer herself 0.0001 ETH assuming it's a tip)
 
 Since 0xYourAnonAddress is anonymous, then redeemer retains privacy because no one knows which ticket was redeemed (not even the coordinator).
+
+## Command options
+
+see `stealth-gas help` and `stealth-gas <command> --help` for more details on each command.

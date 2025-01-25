@@ -1,12 +1,12 @@
+use crate::commands::utils::{get_default_contract_address, get_default_rpc};
 use alloy::{
     hex,
-    primitives::{U256, Address, Bytes},
-    providers::ProviderBuilder,
     network::EthereumWallet,
-    sol,
+    primitives::{Address, Bytes, U256},
+    providers::ProviderBuilder,
     signers::local::PrivateKeySigner,
+    sol,
 };
-use alloy_signer_local::PrivateKeySigner;
 use eth_stealth_gas_tickets::UnsignedTicket;
 use serde_json;
 use std::fs;
@@ -20,7 +20,33 @@ sol! {
     }
 }
 
-pub async fn run(rpc_url: String, contract_address: String, input: String, private_key: Option<String>, account: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(
+    rpc_url: Option<String>,
+    contract_address: Option<String>,
+    input: Option<String>,
+    private_key: Option<String>,
+    account: Option<String>,
+    chain_id: Option<u64>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Get chain ID and defaults
+    let chain_id = chain_id.unwrap_or(17000);
+
+    // Use provided values or defaults
+    let rpc_url = rpc_url.unwrap_or(get_default_rpc(chain_id));
+    let contract_address = contract_address.unwrap_or(get_default_contract_address(chain_id));
+    let mut input_path = input.unwrap_or_else(|| "".to_string());
+
+    // If input path is empty, use default path in ~/.stealthereum
+    if input_path.is_empty() {
+        let home_dir = dirs::home_dir().expect("Could not find home directory");
+        let stealth_dir = home_dir.join(".stealthereum");
+        input_path = stealth_dir
+            .join(format!("unsigned_tickets_{}.json", chain_id))
+            .to_str()
+            .expect("Failed to convert path to string")
+            .to_string();
+    }
+
     if private_key.is_none() && account.is_none() {
         return Err("Either private key or account path must be provided".into());
     }
@@ -41,7 +67,7 @@ pub async fn run(rpc_url: String, contract_address: String, input: String, priva
         let password = rpassword::prompt_password("Enter keystore password:")?;
         PrivateKeySigner::decrypt_keystore(account, password).expect("failed to unlock keystore")
     } else {
-        return Err("Neither private key or keystore provided".into())
+        return Err("Neither private key or keystore provided".into());
     };
     let signer_provider = ProviderBuilder::new()
         .with_recommended_fillers()
@@ -52,12 +78,12 @@ pub async fn run(rpc_url: String, contract_address: String, input: String, priva
     let contract = IStealthGasStation::new(contract_address, signer_provider.clone());
 
     // Load unsigned tickets
-    let unsigned_tickets: Vec<UnsignedTicket> = serde_json::from_str(&fs::read_to_string(input)?)?;
-    
+    let unsigned_tickets: Vec<UnsignedTicket> = serde_json::from_str(&fs::read_to_string(&input_path)?)?;
+
     // Get costs from contract
     let ticket_cost = contract.ticketCost().call().await?._0;
     let shipping_cost = contract.shippingCost().call().await?._0;
-    
+
     // Calculate total cost
     let total_cost = ticket_cost * U256::from(unsigned_tickets.len()) + shipping_cost;
 
