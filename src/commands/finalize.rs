@@ -134,6 +134,11 @@ pub async fn run(
         blind_signatures.len()
     );
 
+    if blind_signatures.len() == 0 {
+        println!("No matching tickets found. Exiting.");
+        return Ok(());
+    }
+
     // Initialize the ticket verifier
     let pubkey = TicketsVerifier::from_hex_string(&pubkey_hex).expect("Invalid public key");
 

@@ -1,6 +1,6 @@
 [package]
 name = "stealth-gas-cli"
-version = "0.0.4"
+version = "0.1.0"
 authors = ["kassandra.eth <0xDADA@protonmail.com>"]
 license = "MIT"
 edition = "2021"

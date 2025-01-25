@@ -27,7 +27,7 @@ enum Commands {
         #[arg(short = 'c', long = "chain-id", help = "Chain ID")]
         chain_id: Option<u64>,
     },
-    /// Finalize blind signed tickets to generate redeemable gas tickets (includes scanning)
+    /// Finalize blind signed tickets to generate redeemable gas tickets
     Finalize {
         #[arg(short = 'p', long = "pubkey", help = "Coordinator public key")]
         pubkey: Option<String>,
@@ -55,7 +55,7 @@ enum Commands {
             help = "StealthGasStation contract address"
         )]
         gas_station_address: Option<String>,
-        #[arg(short = 's', long = "start-block", help = "Start block")]
+        #[arg(short = 's', long = "start-block", help = "Start block number")]
         start_block: u64,
         #[arg(short = 'c', long = "chain-id", help = "Chain ID")]
         chain_id: Option<u64>,
@@ -84,7 +84,7 @@ enum Commands {
         #[arg(short = 'c', long = "chain-id", help = "Chain ID")]
         chain_id: Option<u64>,
     },
-    /// Buy gas tickets on-chain
+    /// Buy gas tickets onchain (requires funds for tx)
     Buy {
         #[arg(
             short = 'r',

@@ -16,7 +16,7 @@ cargo install stealth-gas-cli
 
 ## Basic Usage
 
-step 1: generate 10 unsigned tickets
+step 1: generate 10 unsigned tickets and store them locally
 
 ```bash
 stealth-gas new -n 10
@@ -28,7 +28,7 @@ step 2: call buyGasTickets onchain to take your 10 locally created unsigned tick
 stealth-gas buy -i ~/.stealthereum/unsigned_tickets_17000.json -k 0xYourPrivateKey
 ```
 
-step 3: after buying gas tickets and waiting (~15 min must wait usually, but up to ~1 hour in worse conditions) finalize your tickets after cooridinator returned signed tickets (by calling sendGasTickets onchain)
+step 3: after buying gas tickets and waiting (~15 min must wait usually, but up to ~1 hour at worst) finalize your tickets
 
 ```bash
 stealth-gas finalize --start-block 3048901 -i ~/.stealthereum/unsigned_tickets_17000.json
@@ -40,6 +40,10 @@ step 4: user can now send a SpendRequest to the coordinator server and redeem th
 stealth-gas redeem -s '[{"amount": "9900000000000000", "receiver": "0xYourAnonAddress"}]' -i ~/.stealthereum/finalized_tickets_17000.json
 ```
 
-here we redeem 10 signed tickets worth 0.01 ETH in total. We send 0.0099 ETH to 0xYourAnonAddress. (Since there is leftover the coordinator will take it and transfer herself 0.0001 ETH)
+here we redeem 10 signed tickets worth 0.01 ETH in total. We send 0.0099 ETH to 0xYourAnonAddress. (Since there is leftover the coordinator will take it and transfer herself 0.0001 ETH assuming it's a tip)
 
 Since 0xYourAnonAddress is anonymous, then redeemer retains privacy because no one knows which ticket was redeemed (not even the coordinator).
+
+## Command options
+
+see `stealth-gas help` and `stealth-gas <command> --help` for more details on each command.
